@@ -6,9 +6,9 @@ module PrometheusAggregator
   class Client
     DEFAULT_BUCKETS = [0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10].freeze
 
-    def initialize(host, port, tls_cert: nil, tls_key: nil, default_labels: {})
-      @exporter = Exporter.new(host, port, tls_cert, tls_key)
-      @default_labels = default_labels
+    def initialize(host, port, opts = {})
+      @default_labels = opts.delete(:default_labels) || {}
+      @exporter = Exporter.new(host, port, opts)
 
       @exporter.start
     end

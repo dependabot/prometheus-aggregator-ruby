@@ -62,8 +62,8 @@ class ClientTest < Minitest::Test
     AggregatorServer.stop
     AggregatorServer.start
 
-    # Connection retries happen every second
-    sleep 1.2
+    # Connection retries happen every 0.1 seconds
+    sleep 0.2
     client.counter(name: "test_counter_2", value: 1, help: "Help text")
     sleep 0.1
 
@@ -83,7 +83,8 @@ class ClientTest < Minitest::Test
 
     AggregatorServer.start
 
-    sleep 1.2
+    # Automatic reconnect attempts happen every 0.1 seconds
+    sleep 0.2
 
     assert_includes AggregatorServer.scrape_metrics, "test_counter{} 5.0"
 

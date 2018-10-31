@@ -11,11 +11,13 @@ module PrometheusAggregator
     QUEUE_CAPACITY = 100
     LOOP_INTERVAL = 0.01
 
-    def initialize(host, port, tls_cert, tls_key)
+    def initialize(host, port, opts = {})
       @host = host
       @port = port
-      @tls_cert = tls_cert
-      @tls_key = tls_key
+      @tls_cert = opts[:tls_cert]
+      @tls_key = opts[:tls_key]
+      @connection_retry_interval =
+        opts[:connection_retry_interval] || CONNECTION_RETRY_INTERVAL
       @registered = {}
 
       @mutex = Mutex.new
@@ -50,7 +52,7 @@ module PrometheusAggregator
 
         connect unless connection_ok?
         unless connection_ok?
-          sleep(CONNECTION_RETRY_INTERVAL)
+          sleep(@connection_retry_interval)
           next
         end
 

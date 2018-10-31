@@ -5,7 +5,7 @@ require "prometheus_aggregator/client"
 
 class ClientTest < Minitest::Test
   def test_capacity_is_enforced
-    exporter = PrometheusAggregator::Exporter.new(nil, nil, nil, nil)
+    exporter = PrometheusAggregator::Exporter.new(nil, nil)
     105.times { exporter.enqueue(:foo) }
 
     capacity = PrometheusAggregator::Exporter::QUEUE_CAPACITY
