@@ -7,14 +7,24 @@ require "minitest/autorun"
 require "excon"
 
 module AggregatorServer
-  def self.client
-    PrometheusAggregator::Client.new("localhost", 8191)
+  LISTEN_PORT = 18_191
+  SCRAPE_PORT = 18_192
+
+  def self.scrape_metrics
+    Excon.get("http://127.0.0.1:#{SCRAPE_PORT}/metrics").body
+  end
+
+  def self.client(opts = {})
+    PrometheusAggregator::Client.new("127.0.0.1", LISTEN_PORT, opts)
   end
 
   def self.start
     download_binary unless File.exist?(binary_path)
 
-    @pid = IO.popen(binary_path).pid
+    listen_addr = "tcp://127.0.0.1:#{LISTEN_PORT}"
+    scrape_url = "tcp://127.0.0.1:#{SCRAPE_PORT}/metrics"
+    args = ["-socket", listen_addr, "-prometheus", scrape_url]
+    @pid = IO.popen(([binary_path] + args).join(" ")).pid
 
     wait_for_server
   end
@@ -41,7 +51,7 @@ module AggregatorServer
   def self.wait_for_server
     retries = 0
     begin
-      socket = TCPSocket.new("localhost", 8191)
+      socket = TCPSocket.new("127.0.0.1", LISTEN_PORT)
       socket.close
     rescue Errno::ECONNREFUSED => err
       raise err if retries >= 20
