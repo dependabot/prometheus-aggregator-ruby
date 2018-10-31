@@ -10,12 +10,14 @@ module PrometheusAggregator
     CONNECTION_RETRY_INTERVAL = 1.0
     QUEUE_CAPACITY = 100
     LOOP_INTERVAL = 0.01
+    STALENESS_THRESHOLD = 5.0
 
     def initialize(host, port, opts = {})
       @host = host
       @port = port
       @tls_cert = opts[:tls_cert]
       @tls_key = opts[:tls_key]
+      @staleness_threshold = opts[:staleness_threshold] || STALENESS_THRESHOLD
       @connection_retry_interval =
         opts[:connection_retry_interval] || CONNECTION_RETRY_INTERVAL
       @registered = {}
@@ -31,7 +33,7 @@ module PrometheusAggregator
 
     def enqueue(record)
       @mutex.synchronize do
-        @queue << record
+        @queue << [Time.now, record]
         @queue.shift while @queue.length > QUEUE_CAPACITY
       end
     end
@@ -56,15 +58,24 @@ module PrometheusAggregator
           next
         end
 
-        event = @mutex.synchronize { @queue.shift }
+        event = @mutex.synchronize do
+          @queue.shift while !@queue.empty? && stale?(@queue.first)
+          @queue.shift
+        end
+
         if event.nil?
           sleep(LOOP_INTERVAL)
           next
         end
 
-        register(event)
-        emit_value(event)
+        record = event[1]
+        register(record)
+        emit_value(record)
       end
+    end
+
+    def stale?(record)
+      record[0] < Time.now - @staleness_threshold
     end
 
     def connection_ok?

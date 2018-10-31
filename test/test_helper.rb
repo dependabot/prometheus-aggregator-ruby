@@ -15,6 +15,7 @@ module AggregatorServer
   end
 
   def self.client(opts = {})
+    opts = { connection_retry_interval: 0.1 }.merge(opts)
     PrometheusAggregator::Client.new("127.0.0.1", LISTEN_PORT, opts)
   end
 

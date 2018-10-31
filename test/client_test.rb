@@ -90,4 +90,26 @@ class ClientTest < Minitest::Test
 
     client.stop
   end
+
+  def test_that_stale_events_are_dropped
+    AggregatorServer.stop
+
+    client = AggregatorServer.client(staleness_threshold: 1.0)
+
+    client.counter(name: "test_counter", value: 1, help: "Help text")
+    client.counter(name: "test_counter", value: 1, help: "Help text")
+
+    sleep 1.0
+
+    client.counter(name: "test_counter", value: 1, help: "Help text")
+    client.counter(name: "test_counter", value: 1, help: "Help text")
+
+    AggregatorServer.start
+
+    sleep 0.2
+
+    assert_includes AggregatorServer.scrape_metrics, "test_counter{} 2.0"
+
+    client.stop
+  end
 end
