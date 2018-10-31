@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "openssl"
 require "json"
 require "socket"
 require "net_tcp_client"
