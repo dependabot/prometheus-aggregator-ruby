@@ -71,4 +71,22 @@ class ClientTest < Minitest::Test
 
     client.stop
   end
+
+  def test_records_are_buffered
+    AggregatorServer.stop
+
+    client = AggregatorServer.client
+
+    5.times do
+      client.counter(name: "test_counter", value: 1, help: "Help text")
+    end
+
+    AggregatorServer.start
+
+    sleep 1.2
+
+    assert_includes AggregatorServer.scrape_metrics, "test_counter{} 5.0"
+
+    client.stop
+  end
 end
