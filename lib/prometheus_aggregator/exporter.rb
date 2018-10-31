@@ -111,7 +111,8 @@ module PrometheusAggregator
         read_timeout: 3.0,
         connect_retry_count: 0
       )
-    rescue Net::TCPClient::ConnectionFailure
+    rescue Net::TCPClient::ConnectionFailure => err
+      PrometheusAggregator.logger.debug(err)
       @socket = nil
     end
 
@@ -130,7 +131,8 @@ module PrometheusAggregator
 
     def send_line(line)
       @socket.write(line + "\n")
-    rescue Net::TCPClient::ConnectionFailure
+    rescue Net::TCPClient::ConnectionFailure => err
+      PrometheusAggregator.logger.debug(err)
       @socket = nil
     end
   end
