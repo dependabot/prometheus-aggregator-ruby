@@ -16,8 +16,7 @@ module PrometheusAggregator
     def initialize(host, port, opts = {})
       @host = host
       @port = port
-      @tls_cert = opts[:tls_cert]
-      @tls_key = opts[:tls_key]
+      @ssl_params = opts[:ssl_params]
       @staleness_threshold = opts[:staleness_threshold] || STALENESS_THRESHOLD
       @connection_retry_interval =
         opts[:connection_retry_interval] || CONNECTION_RETRY_INTERVAL
@@ -94,18 +93,9 @@ module PrometheusAggregator
       @registered = {}
       @pid = Process.pid
 
-      ssl_opts = nil
-      if @tls_cert && @tls_key
-        ssl_opts = {
-          cert: OpenSSL::X509::Certificate.new(@tls_cert),
-          key: OpenSSL::PKey::RSA.new(@tls_key, ""),
-          verify_mode: OpenSSL::SSL::VERIFY_NONE
-        }
-      end
-
       @socket = Net::TCPClient.new(
         server: "#{@host}:#{@port}",
-        ssl: ssl_opts,
+        ssl: @ssl_params,
         connect_timeout: 3.0,
         write_timeout: 3.0,
         read_timeout: 3.0,
