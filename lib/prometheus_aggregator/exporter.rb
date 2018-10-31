@@ -93,6 +93,8 @@ module PrometheusAggregator
       @registered = {}
       @pid = Process.pid
 
+      @socket&.close
+
       @socket = Net::TCPClient.new(
         server: "#{@host}:#{@port}",
         ssl: @ssl_params,
@@ -103,6 +105,7 @@ module PrometheusAggregator
       )
     rescue Net::TCPClient::ConnectionFailure => err
       PrometheusAggregator.logger.debug(err)
+      @socket&.close
       @socket = nil
     end
 
@@ -123,6 +126,7 @@ module PrometheusAggregator
       @socket.write(line + "\n")
     rescue Net::TCPClient::ConnectionFailure => err
       PrometheusAggregator.logger.debug(err)
+      @socket&.close
       @socket = nil
     end
   end
