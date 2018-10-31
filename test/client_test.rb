@@ -17,22 +17,28 @@ class ClientTest < Minitest::Test
     client = AggregatorServer.client
     client.counter(name: "test_counter", value: 1, help: "Help text")
     client.counter(name: "test_counter", value: 1, help: "Help text")
+    sleep 0.1
 
     response = Excon.get("http://localhost:8192/metrics")
     assert_includes response.body, "# HELP test_counter Help text\n"
     assert_includes response.body, "# TYPE test_counter counter\n"
     assert_includes response.body, "test_counter{} 2.0"
+
+    client.stop
   end
 
   def test_histograms_work_correctly
     client = AggregatorServer.client
     client.histogram(name: "test_histogram", value: 0.9, help: "Help text")
+    sleep 0.1
 
     response = Excon.get("http://localhost:8192/metrics")
     assert_includes response.body, "# HELP test_histogram Help text\n"
     assert_includes response.body, "# TYPE test_histogram histogram\n"
     assert_includes response.body, "test_histogram_bucket{le=\"0.01\"} 0\n"
     assert_includes response.body, "test_histogram_bucket{le=\"1\"} 1\n"
+
+    client.stop
   end
 
   def test_handles_disconnections
@@ -44,6 +50,8 @@ class ClientTest < Minitest::Test
 
     # Shouldn't blow up
     client.counter(name: "test_counter_1", value: 1, help: "Help text")
+
+    client.stop
   end
 
   def test_handles_reconnections
@@ -54,10 +62,14 @@ class ClientTest < Minitest::Test
     AggregatorServer.stop
     AggregatorServer.start
 
+    # Connection retries happen every second
+    sleep 1.2
     client.counter(name: "test_counter_2", value: 1, help: "Help text")
     sleep 0.1
 
     response = Excon.get("http://localhost:8192/metrics")
     assert_includes response.body, "test_counter_2{} 1.0"
+
+    client.stop
   end
 end
