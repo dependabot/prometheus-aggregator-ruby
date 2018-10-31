@@ -4,12 +4,11 @@ require "json"
 require "socket"
 require "net_tcp_client"
 
-# TODO: error handling, reconnect on (some) failures
-
 module PrometheusAggregator
   class Exporter
     CONNECTION_RETRY_INTERVAL = 1.0
     QUEUE_CAPACITY = 100
+    LOOP_INTERVAL = 0.01
 
     def initialize(host, port, tls_cert, tls_key)
       @host = host
@@ -34,6 +33,10 @@ module PrometheusAggregator
       end
     end
 
+    def backlog
+      @queue.length
+    end
+
     def stop
       @stop = true
     end
@@ -46,13 +49,13 @@ module PrometheusAggregator
 
         connect unless connection_ok?
         unless connection_ok?
-          sleep CONNECTION_RETRY_INTERVAL
+          sleep(CONNECTION_RETRY_INTERVAL)
           next
         end
 
         event = @mutex.synchronize { @queue.shift }
         if event.nil?
-          sleep 0.01
+          sleep(LOOP_INTERVAL)
           next
         end
 
