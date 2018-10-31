@@ -4,6 +4,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "prometheus_aggregator"
 
 require "minitest/autorun"
+require "excon"
 
 module AggregatorServer
   def self.client
@@ -11,8 +12,8 @@ module AggregatorServer
   end
 
   def self.start
-    binary_name = "prometheus-aggregator-0.0.11-darwin-amd64"
-    binary_path = File.join(File.expand_path("..", __dir__), binary_name)
+    download_binary unless File.exist?(binary_path)
+
     @pid = IO.popen(binary_path).pid
 
     wait_for_server
@@ -48,6 +49,35 @@ module AggregatorServer
       sleep 0.1
       retries += 1
       retry
+    end
+  end
+
+  def self.binary_path
+    File.join(binary_dir, "prometheus-aggregator")
+  end
+
+  def self.binary_dir
+    File.join(File.expand_path("..", __dir__), "tmp")
+  end
+
+  def self.download_binary
+    puts " => Downloading prometheus-aggregator binary"
+    repo = "peterbourgon/prometheus-aggregator"
+    releases_url = "https://api.github.com/repos/#{repo}/releases/latest"
+    response = JSON.parse(Excon.get(releases_url).body)
+    asset = response["assets"].find { |a| a["name"].include?(platform) }
+
+    download_url = Excon.get(asset["browser_download_url"]).headers["Location"]
+    response = Excon.get(download_url, omit_default_port: true)
+    FileUtils.mkdir_p(binary_dir)
+    File.open(binary_path, "wb", 0o755) { |f| f.write(response.body) }
+  end
+
+  def self.platform
+    case RbConfig::CONFIG["arch"]
+    when /linux/ then "linux"
+    when /darwin/ then "darwin"
+    else raise "Invalid platform #{RbConfig::CONFIG['arch']}"
     end
   end
 end
