@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
-require "json"
-require "socket"
-require "net_tcp_client"
 require "prometheus_aggregator/exporter"
-
-# TODO: error handling, reconnect on (some) failures
 
 module PrometheusAggregator
   class Client

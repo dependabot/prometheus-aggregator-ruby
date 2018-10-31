@@ -1,5 +1,4 @@
-require "prometheus_aggregator/version"
+# frozen_string_literal: true
 
-module PrometheusAggregator
-  # Your code goes here...
-end
+require "prometheus_aggregator/client"
+require "prometheus_aggregator/version"
