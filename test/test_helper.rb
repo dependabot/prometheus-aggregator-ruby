@@ -6,6 +6,8 @@ require "prometheus_aggregator"
 require "minitest/autorun"
 require "excon"
 
+PrometheusAggregator.logger = Logger.new(File.open("/dev/null", "w"))
+
 module AggregatorServer
   LISTEN_PORT = 18_191
   SCRAPE_PORT = 18_192

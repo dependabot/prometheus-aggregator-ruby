@@ -4,6 +4,7 @@ require "openssl"
 require "json"
 require "socket"
 require "net_tcp_client"
+require "prometheus_aggregator"
 
 module PrometheusAggregator
   class Exporter
@@ -54,6 +55,10 @@ module PrometheusAggregator
 
         connect unless connection_ok?
         unless connection_ok?
+          PrometheusAggregator.logger.warn(
+            "Not connected to prometheus agggregator (#{@host}:#{@port})"
+          )
+
           sleep(@connection_retry_interval)
           next
         end
