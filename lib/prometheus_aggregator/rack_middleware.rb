@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "prometheus_aggregator"
+
 module PrometheusAggregator
   class RackMiddleware
     def initialize(app, options = {})
@@ -13,19 +15,24 @@ module PrometheusAggregator
       response = @app.call(env)
       duration = Time.now - start_time
 
-      @client.counter(
-        name: "http_server_requests_total",
-        help: "The total number of HTTP requests handled by the Rack app",
-        value: 1,
-        labels: labels(env).merge(code: response.first.to_s)
-      )
+      begin
+        @client.counter(
+          name: "http_server_requests_total",
+          help: "The total number of HTTP requests handled by the Rack app",
+          value: 1,
+          labels: labels(env).merge(code: response.first.to_s)
+        )
 
-      @client.histogram(
-        name: "http_server_request_duration_seconds",
-        help: "The HTTP response duration of the Rack application",
-        value: duration,
-        labels: labels(env)
-      )
+        @client.histogram(
+          name: "http_server_request_duration_seconds",
+          help: "The HTTP response duration of the Rack application",
+          value: duration,
+          labels: labels(env)
+        )
+      rescue => err # rubocop:disable Style/RescueStandardError
+        # Let's be ultra defensive. Metrics should never break the app.
+        PrometheusAggregator.logger.error("RackMiddleware: #{err}")
+      end
 
       response
     end
