@@ -17,9 +17,10 @@ module PrometheusAggregator
       @host = host
       @port = port
       @ssl_params = opts[:ssl_params]
-      @staleness_threshold = opts[:staleness_threshold] || STALENESS_THRESHOLD
       @connection_retry_interval =
         opts[:connection_retry_interval] || CONNECTION_RETRY_INTERVAL
+      @queue_capacity = opts[:queue_capacity] || QUEUE_CAPACITY
+      @staleness_threshold = opts[:staleness_threshold] || STALENESS_THRESHOLD
       @registered = {}
 
       @stop = false
