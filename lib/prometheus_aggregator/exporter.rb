@@ -22,17 +22,25 @@ module PrometheusAggregator
         opts[:connection_retry_interval] || CONNECTION_RETRY_INTERVAL
       @registered = {}
 
+      @stop = false
+      @pid = nil
       @mutex = Mutex.new
       @queue = []
     end
 
-    def start
-      @stop = false
-      @thread = Thread.new { write_loop }
-    end
-
     def enqueue(record)
       @mutex.synchronize do
+        if Process.pid != @pid
+          PrometheusAggregator.logger.info("Pid mismatch, spawning new thread")
+          @thread&.kill
+          @thread = nil
+        end
+
+        if @thread.nil?
+          @thread = Thread.new { write_loop }
+          @pid = Process.pid
+        end
+
         @queue << [Time.now, record]
         @queue.shift while @queue.length > QUEUE_CAPACITY
       end
@@ -83,15 +91,11 @@ module PrometheusAggregator
     end
 
     def connection_ok?
-      return false unless @socket
-      return false if Process.pid != @pid
-
-      @socket.alive?
+      !@socket.nil? && @socket.alive?
     end
 
     def connect
       @registered = {}
-      @pid = Process.pid
 
       @socket&.close
 

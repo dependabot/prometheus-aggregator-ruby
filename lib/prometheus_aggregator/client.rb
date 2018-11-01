@@ -9,8 +9,6 @@ module PrometheusAggregator
     def initialize(host, port, opts = {})
       @default_labels = opts.delete(:default_labels) || {}
       @exporter = Exporter.new(host, port, opts)
-
-      @exporter.start
     end
 
     def counter(name:, value:, help:, labels: {})
