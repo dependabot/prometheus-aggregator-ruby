@@ -30,6 +30,7 @@ class RackMiddlewareTest < Minitest::Test
     client.expect(:counter, nil) do |opts|
       next false unless opts[:labels][:method] == "get"
       next false unless opts[:labels][:path] == "/foo/:id/bar/:id"
+      next false unless opts[:labels][:code] == "200"
 
       opts[:value] == 1
     end
