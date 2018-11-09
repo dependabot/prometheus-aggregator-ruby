@@ -29,5 +29,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "faraday", "~> 0.15"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rack", "~> 2.0"
-  spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency "rake", "~> 12.3"
 end
