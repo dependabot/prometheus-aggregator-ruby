@@ -27,6 +27,20 @@ class ClientTest < Minitest::Test
     client.stop
   end
 
+  def test_gauges_work_correctly
+    client = AggregatorServer.client
+    client.gauge(name: "test_gauge", value: 1, help: "Help text")
+    client.gauge(name: "test_gauge", value: 2, help: "Help text")
+    sleep 0.1
+
+    scrape_result = AggregatorServer.scrape_metrics
+    assert_includes scrape_result, "# HELP test_gauge Help text\n"
+    assert_includes scrape_result, "# TYPE test_gauge gauge\n"
+    assert_includes scrape_result, "test_gauge{} 2.0"
+
+    client.stop
+  end
+
   def test_histograms_work_correctly
     client = AggregatorServer.client
     client.histogram(name: "test_histogram", value: 0.9, help: "Help text")

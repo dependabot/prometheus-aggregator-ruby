@@ -21,6 +21,16 @@ module PrometheusAggregator
       )
     end
 
+    def gauge(name:, value:, help:, labels: {})
+      @exporter.enqueue(
+        type: "gauge",
+        name: name,
+        value: value,
+        help: help,
+        labels: @default_labels.dup.merge(labels)
+      )
+    end
+
     def histogram(name:, value:, help:, buckets: DEFAULT_BUCKETS, labels: {})
       @exporter.enqueue(
         type: "histogram",
