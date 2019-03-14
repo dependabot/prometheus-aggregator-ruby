@@ -27,6 +27,8 @@ module PrometheusAggregator
       @pid = nil
       @mutex = Mutex.new
       @queue = []
+      @socket = nil
+      @thread = nil
     end
 
     def enqueue(record)
