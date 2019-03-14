@@ -1,3 +1,6 @@
+## 1.0.0 - 2018-11-07
+- Support gauges
+
 ## 0.2.0 - 2018-11-07
 - Add Faraday middleware
 
